@@ -308,6 +308,16 @@ def write_readme(build: Path, commit: str) -> None:
 
 {commit_line}
 
+## 설치
+
+```bash
+install_root="$HOME/.agents/skills/agent-skills"
+mkdir -p "$install_root"
+
+rm -rf "$install_root/skills" "$install_root/.codex-plugin"
+cp -R skills .codex-plugin "$install_root"/
+```
+
 ## Update
 
 원본 repo가 업데이트되면 다음 명령으로 이 Codex용 출력물을 다시 생성합니다.
