@@ -204,14 +204,18 @@ def write_user_invoked_openai_yaml(skill_dir: Path) -> None:
 def transform_text(text: str, skill_names: Sequence[str]) -> str:
     names = "|".join(re.escape(name) for name in sorted(skill_names, key=len, reverse=True))
     if names:
-        text = re.sub(rf"`/({names})`", r"`$\1`", text)
+        text = re.sub(
+            rf"(?<![A-Za-z0-9._~:/-])/({names})(?![A-Za-z0-9_-]|/)",
+            r"$\1",
+            text,
+        )
     text = text.replace(
-        "omit `disable-model-invocation`, and write",
-        "omit `policy.allow_implicit_invocation: false`, and write",
+        "`disable-model-invocation`",
+        "`policy.allow_implicit_invocation`",
     )
     text = text.replace(
-        "set `disable-model-invocation: true`; the `description` becomes human-facing",
-        "add `policy.allow_implicit_invocation: false` in `agents/openai.yaml`; the `description` remains human-facing",
+        "`disable-model-invocation: true`",
+        "`policy.allow_implicit_invocation: false`",
     )
     return text
 
