@@ -314,10 +314,7 @@ def write_readme(build: Path, commit: str) -> None:
 
 ```bash
 # mattpocock의 skills 폴더 안에서 실행
-git clone https://github.com/rmekdma/mattpocock.git
 ./mattpocock/update-from-source.py
-cp -r mattpocock ~/.agents/skills
-
 cd mattpocock
 git add . && git commit -m "update" && git push origin main
 ```
