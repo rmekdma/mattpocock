@@ -323,7 +323,9 @@ cp -R skills .codex-plugin "$install_root"/
 원본 repo가 업데이트되면 다음 명령으로 이 Codex용 출력물을 다시 생성합니다.
 
 ```bash
-# mattpocock의 skills 폴더 안에서 실행
+git clone git@github.com:mattpocock/skills.git
+cd skills
+git clone git@github.com:rmekdma/mattpocock.git
 ./mattpocock/update-from-source.py
 cd mattpocock
 git add . && git commit -m "update" && git push origin main
