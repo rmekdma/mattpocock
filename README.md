@@ -7,7 +7,7 @@
 ## 설치
 
 ```bash
-install_root="$HOME/.agents/skills/agent-skills"
+install_root="$HOME/.agents/skills/mattpocock"
 mkdir -p "$install_root"
 
 rm -rf "$install_root/skills" "$install_root/.codex-plugin"
