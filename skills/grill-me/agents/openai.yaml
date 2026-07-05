@@ -1,0 +1,10 @@
+{
+  "interface": {
+    "display_name": "Grill Me",
+    "short_description": "A relentless interview to sharpen a plan or design.",
+    "default_prompt": "Use $grill-me."
+  },
+  "policy": {
+    "allow_implicit_invocation": false
+  }
+}

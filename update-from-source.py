@@ -12,7 +12,6 @@ from pathlib import Path
 from typing import Any, Hashable, Literal, Sequence, TypeVar
 
 FRONTMATTER_RE = re.compile(r"\A---\n(.*?)\n---\n?", re.DOTALL)
-USER_INVOKED_POLICY = "policy:\n  allow_implicit_invocation: false\n"
 CODEX_TOOLING_REPLACEMENTS = (
     (
         re.compile(r"\buse the Agent tool with `subagent_type=Explore`", re.IGNORECASE),
@@ -39,7 +38,11 @@ class SkillEntry:
         return self.invocation == "user"
 
     def destination_in(self, skills_root: Path) -> Path:
-        return skills_root / self.bucket / self.name
+        return skills_root / self.name
+
+    @property
+    def plugin_path(self) -> str:
+        return f"./skills/{self.bucket}/{self.name}"
 
 
 @dataclass(frozen=True)
@@ -132,6 +135,23 @@ def duplicates_in(values: Sequence[T]) -> list[T]:
     return sorted(duplicates)
 
 
+def selected_skill_entries(snapshot: SourceSnapshot) -> tuple[SkillEntry, ...]:
+    entry_by_plugin_path = {entry.plugin_path: entry for entry in snapshot.entries}
+    selected_entries: list[SkillEntry] = []
+
+    for plugin_path in snapshot.plugin_skills:
+        entry = entry_by_plugin_path.get(plugin_path)
+        if entry is None:
+            fail(f".claude-plugin references undiscovered skill: {plugin_path}")
+        selected_entries.append(entry)
+
+    duplicate_names = duplicates_in([entry.name for entry in selected_entries])
+    if duplicate_names:
+        fail(f"duplicate selected skill names cannot be flattened: {', '.join(duplicate_names)}")
+
+    return tuple(selected_entries)
+
+
 def discover_skill_entries(source: Path) -> tuple[SkillEntry, ...]:
     entries: list[SkillEntry] = []
 
@@ -205,10 +225,33 @@ def source_commit(source: Path) -> str:
     return result.stdout.strip() or "unknown"
 
 
+def display_name_for_skill(name: str) -> str:
+    initialisms = {"api", "css", "html", "prd", "qa", "tdd", "ui"}
+    return " ".join(
+        part.upper() if part in initialisms else part.capitalize()
+        for part in name.split("-")
+    )
+
+
 def write_user_invoked_openai_yaml(skill_dir: Path) -> None:
+    fields = parse_frontmatter_fields(skill_dir / "SKILL.md")
+    name = fields.get("name", skill_dir.name)
+    payload = {
+        "interface": {
+            "display_name": display_name_for_skill(name),
+            "short_description": fields.get("description", name),
+            "default_prompt": f"Use ${name}.",
+        },
+        "policy": {
+            "allow_implicit_invocation": False,
+        },
+    }
     agents_dir = skill_dir / "agents"
     agents_dir.mkdir(parents=True, exist_ok=True)
-    (agents_dir / "openai.yaml").write_text(USER_INVOKED_POLICY, encoding="utf-8")
+    (agents_dir / "openai.yaml").write_text(
+        json.dumps(payload, indent=2) + "\n",
+        encoding="utf-8",
+    )
 
 
 def transform_text(text: str, skill_names: Sequence[str]) -> str:
@@ -282,7 +325,7 @@ def write_plugin_json(build: Path, snapshot: SourceSnapshot) -> None:
         "repository": "https://github.com/mattpocock/skills",
         "license": snapshot.package.get("license", "MIT"),
         "keywords": ["codex", "skills", "engineering", "productivity"],
-        "skills": snapshot.plugin_skills,
+        "skills": "./skills",
         "interface": {
             "displayName": "Matt Pocock Skills",
             "shortDescription": "Engineering workflows for Codex",
@@ -357,9 +400,19 @@ def transform_skills_tree(skills_root: Path, skill_names: Sequence[str]) -> None
 
 
 def copy_transformed_skills(snapshot: SourceSnapshot, skills_root: Path) -> None:
-    shutil.copytree(snapshot.source / "skills", skills_root)
-    transform_skills_tree(skills_root, snapshot.skill_names)
-    for entry in snapshot.user_invoked_entries:
+    selected_entries = selected_skill_entries(snapshot)
+
+    skills_root.mkdir(parents=True)
+    for entry in selected_entries:
+        shutil.copytree(
+            snapshot.source / entry.plugin_path.removeprefix("./"),
+            entry.destination_in(skills_root),
+        )
+
+    transform_skills_tree(skills_root, [entry.name for entry in selected_entries])
+    for entry in selected_entries:
+        if not entry.is_user_invoked:
+            continue
         write_user_invoked_openai_yaml(entry.destination_in(skills_root))
 
 
@@ -414,8 +467,9 @@ def main() -> None:
         if build.exists():
             shutil.rmtree(build)
 
-    user_invoked = [entry.name for entry in snapshot.user_invoked_entries]
-    print(f"Synced {len(snapshot.entries)} skills into {target}")
+    selected_entries = selected_skill_entries(snapshot)
+    user_invoked = [entry.name for entry in selected_entries if entry.is_user_invoked]
+    print(f"Synced {len(selected_entries)} selected skills into {target}")
     print("User-invoked skills:", ", ".join(user_invoked))
 
 

@@ -1,0 +1,10 @@
+{
+  "interface": {
+    "display_name": "Writing Great Skills",
+    "short_description": "Reference for writing and editing skills well \u2014 the vocabulary and principles that make a skill predictable.",
+    "default_prompt": "Use $writing-great-skills."
+  },
+  "policy": {
+    "allow_implicit_invocation": false
+  }
+}
