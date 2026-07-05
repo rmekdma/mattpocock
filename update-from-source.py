@@ -13,6 +13,16 @@ from typing import Any, Hashable, Literal, Sequence, TypeVar
 
 FRONTMATTER_RE = re.compile(r"\A---\n(.*?)\n---\n?", re.DOTALL)
 USER_INVOKED_POLICY = "policy:\n  allow_implicit_invocation: false\n"
+CODEX_TOOLING_REPLACEMENTS = (
+    (
+        re.compile(r"\buse the Agent tool with `subagent_type=Explore`", re.IGNORECASE),
+        "dispatch an exploration-focused subagent",
+    ),
+    (
+        re.compile(r"\busing the Agent tool\b"),
+        "using Codex's available multi-agent tooling",
+    ),
+)
 
 Invocation = Literal["model", "user"]
 T = TypeVar("T", bound=Hashable)
@@ -209,6 +219,8 @@ def transform_text(text: str, skill_names: Sequence[str]) -> str:
             r"$\1",
             text,
         )
+    for pattern, replacement in CODEX_TOOLING_REPLACEMENTS:
+        text = pattern.sub(replacement, text)
     text = text.replace(
         "`disable-model-invocation`",
         "`policy.allow_implicit_invocation`",
