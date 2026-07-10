@@ -225,31 +225,11 @@ def source_commit(source: Path) -> str:
     return result.stdout.strip() or "unknown"
 
 
-def display_name_for_skill(name: str) -> str:
-    initialisms = {"api", "css", "html", "prd", "qa", "tdd", "ui"}
-    return " ".join(
-        part.upper() if part in initialisms else part.capitalize()
-        for part in name.split("-")
-    )
-
-
 def write_user_invoked_openai_yaml(skill_dir: Path) -> None:
-    fields = parse_frontmatter_fields(skill_dir / "SKILL.md")
-    name = fields.get("name", skill_dir.name)
-    payload = {
-        "interface": {
-            "display_name": display_name_for_skill(name),
-            "short_description": fields.get("description", name),
-            "default_prompt": f"Use ${name}.",
-        },
-        "policy": {
-            "allow_implicit_invocation": False,
-        },
-    }
     agents_dir = skill_dir / "agents"
     agents_dir.mkdir(parents=True, exist_ok=True)
     (agents_dir / "openai.yaml").write_text(
-        json.dumps(payload, indent=2) + "\n",
+        "policy:\n allow_implicit_invocation: false\n",
         encoding="utf-8",
     )
 

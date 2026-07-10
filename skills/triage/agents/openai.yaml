@@ -1,10 +1,2 @@
-{
-  "interface": {
-    "display_name": "Triage",
-    "short_description": "Move issues and external PRs through a state machine of triage roles \u2014 categorise, verify, grill if needed, and write agent-ready briefs.",
-    "default_prompt": "Use $triage."
-  },
-  "policy": {
-    "allow_implicit_invocation": false
-  }
-}
+policy:
+ allow_implicit_invocation: false

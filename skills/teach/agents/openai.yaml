@@ -1,10 +1,2 @@
-{
-  "interface": {
-    "display_name": "Teach",
-    "short_description": "Teach the user a new skill or concept, within this workspace.",
-    "default_prompt": "Use $teach."
-  },
-  "policy": {
-    "allow_implicit_invocation": false
-  }
-}
+policy:
+ allow_implicit_invocation: false
