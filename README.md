@@ -2,7 +2,7 @@
 
 이 repo는 [mattpocock/skills](https://github.com/mattpocock/skills)를 Codex 용도로 변환한 결과물입니다.
 
-- 사용한 source commit: [`d5747`](https://github.com/mattpocock/skills/commit/d574778f94cf620fcc8ce741584093bc650a61d3)
+- 사용한 source commit: [`ed376`](https://github.com/mattpocock/skills/commit/ed37663cc5fbef691ddfecd080dff42f7e7e350d)
 
 ## 설치
 
